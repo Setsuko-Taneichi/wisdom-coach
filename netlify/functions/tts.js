@@ -19,10 +19,12 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { text } = JSON.parse(event.body);
+    const { text, voice } = JSON.parse(event.body);
     if (!text) {
       return { statusCode: 400, body: JSON.stringify({ error: "テキストが空です" }) };
     }
+    const allowedVoices = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"];
+    const selectedVoice = allowedVoices.includes(voice) ? voice : "shimmer";
 
     const response = await fetch("https://api.openai.com/v1/audio/speech", {
       method: "POST",
@@ -31,9 +33,9 @@ exports.handler = async (event) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "tts-1",
+        model: "tts-1-hd",
         input: text,
-        voice: "nova",
+        voice: selectedVoice,
         response_format: "mp3",
         speed: 0.95,
       }),
@@ -53,7 +55,7 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: {
         "Content-Type": "audio/mpeg",
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "no-store, no-cache",
       },
       body: audioBuffer.toString("base64"),
       isBase64Encoded: true,
