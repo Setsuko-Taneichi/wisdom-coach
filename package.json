@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "叡智コーチ - 愛と知恵の万能コーチ",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.52.0"
+    "@anthropic-ai/sdk": "^0.52.0",
+    "node-fetch": "^2.7.0"
   }
 }

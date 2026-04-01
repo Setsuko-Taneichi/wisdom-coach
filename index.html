@@ -192,45 +192,37 @@ function addErrorMessage(text) {
 }
 function scrollToBottom() { chatArea.scrollTop = chatArea.scrollHeight; }
 
-function getBestJaVoice() {
-  const voices = speechSynthesis.getVoices();
-  const preferredNames = ['O-Ren (Enhanced)', 'Kyoko (Enhanced)', 'O-Ren', 'Kyoko', 'Haruka', 'Google 日本語'];
-  for (const name of preferredNames) {
-    const v = voices.find(v => v.name.includes(name) && v.lang.startsWith('ja'));
-    if (v) return v;
-  }
-  return voices.find(v => v.lang.startsWith('ja') && (v.name.toLowerCase().includes('premium') || v.name.toLowerCase().includes('enhanced')))
-    || voices.find(v => v.lang.startsWith('ja') && v.name.toLowerCase().includes('female'))
-    || voices.find(v => v.lang.startsWith('ja'));
-}
-function speakText(text, btnElement) {
-  speechSynthesis.cancel();
+let currentAudio = null;
+async function speakText(text, btnElement) {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   document.querySelectorAll('.speaker-btn.speaking').forEach(b => b.classList.remove('speaking'));
-  const sentences = text.match(/[^。！？\n]+[。！？]?/g) || [text];
-  const baseRate = parseFloat(voiceSpeed.value);
-  const voice = getBestJaVoice();
-  let i = 0;
   if (btnElement) btnElement.classList.add('speaking');
-  function speakNext() {
-    if (i >= sentences.length) {
+  try {
+    const res = await fetch('/.netlify/functions/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (!res.ok) throw new Error('TTS error');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    currentAudio = audio;
+    audio.playbackRate = parseFloat(voiceSpeed.value);
+    audio.onended = () => {
       if (btnElement) btnElement.classList.remove('speaking');
-      currentUtterance = null;
-      return;
-    }
-    const s = sentences[i].trim();
-    if (!s) { i++; speakNext(); return; }
-    const utt = new SpeechSynthesisUtterance(s);
-    utt.lang = 'ja-JP';
-    utt.rate = baseRate * 0.88;
-    utt.pitch = 1.12;
-    utt.volume = 0.95;
-    if (voice) utt.voice = voice;
-    utt.onend = () => { i++; setTimeout(speakNext, 350); };
-    utt.onerror = () => { if (btnElement) btnElement.classList.remove('speaking'); currentUtterance = null; };
-    currentUtterance = utt;
-    speechSynthesis.speak(utt);
+      currentAudio = null;
+      URL.revokeObjectURL(url);
+    };
+    audio.onerror = () => {
+      if (btnElement) btnElement.classList.remove('speaking');
+      currentAudio = null;
+    };
+    audio.play();
+  } catch (e) {
+    if (btnElement) btnElement.classList.remove('speaking');
+    currentAudio = null;
   }
-  speakNext();
 }
 speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
 userInput.focus();
