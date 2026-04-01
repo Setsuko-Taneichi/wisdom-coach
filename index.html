@@ -192,27 +192,45 @@ function addErrorMessage(text) {
 }
 function scrollToBottom() { chatArea.scrollTop = chatArea.scrollHeight; }
 
-function speakText(text, btnElement) {
-  if (currentUtterance) speechSynthesis.cancel();
-  document.querySelectorAll('.speaker-btn.speaking').forEach(b => b.classList.remove('speaking'));
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'ja-JP'; utterance.rate = parseFloat(voiceSpeed.value); utterance.pitch = 1.15;
+function getBestJaVoice() {
   const voices = speechSynthesis.getVoices();
-  const preferredNames = ['Kyoko', 'O-Ren', 'Haruka', 'Google 日本語'];
-  let jaVoice = null;
+  const preferredNames = ['O-Ren (Enhanced)', 'Kyoko (Enhanced)', 'O-Ren', 'Kyoko', 'Haruka', 'Google 日本語'];
   for (const name of preferredNames) {
-    jaVoice = voices.find(v => v.name.includes(name) && v.lang.startsWith('ja'));
-    if (jaVoice) break;
+    const v = voices.find(v => v.name.includes(name) && v.lang.startsWith('ja'));
+    if (v) return v;
   }
-  if (!jaVoice) jaVoice = voices.find(v => v.lang.startsWith('ja') && v.name.toLowerCase().includes('female'));
-  if (!jaVoice) jaVoice = voices.find(v => v.lang.startsWith('ja'));
-  if (jaVoice) utterance.voice = jaVoice;
-  if (btnElement) {
-    btnElement.classList.add('speaking');
-    utterance.onend = () => { btnElement.classList.remove('speaking'); currentUtterance = null; };
-    utterance.onerror = () => { btnElement.classList.remove('speaking'); currentUtterance = null; };
+  return voices.find(v => v.lang.startsWith('ja') && (v.name.toLowerCase().includes('premium') || v.name.toLowerCase().includes('enhanced')))
+    || voices.find(v => v.lang.startsWith('ja') && v.name.toLowerCase().includes('female'))
+    || voices.find(v => v.lang.startsWith('ja'));
+}
+function speakText(text, btnElement) {
+  speechSynthesis.cancel();
+  document.querySelectorAll('.speaker-btn.speaking').forEach(b => b.classList.remove('speaking'));
+  const sentences = text.match(/[^。！？\n]+[。！？]?/g) || [text];
+  const baseRate = parseFloat(voiceSpeed.value);
+  const voice = getBestJaVoice();
+  let i = 0;
+  if (btnElement) btnElement.classList.add('speaking');
+  function speakNext() {
+    if (i >= sentences.length) {
+      if (btnElement) btnElement.classList.remove('speaking');
+      currentUtterance = null;
+      return;
+    }
+    const s = sentences[i].trim();
+    if (!s) { i++; speakNext(); return; }
+    const utt = new SpeechSynthesisUtterance(s);
+    utt.lang = 'ja-JP';
+    utt.rate = baseRate * 0.88;
+    utt.pitch = 1.12;
+    utt.volume = 0.95;
+    if (voice) utt.voice = voice;
+    utt.onend = () => { i++; setTimeout(speakNext, 350); };
+    utt.onerror = () => { if (btnElement) btnElement.classList.remove('speaking'); currentUtterance = null; };
+    currentUtterance = utt;
+    speechSynthesis.speak(utt);
   }
-  currentUtterance = utterance; speechSynthesis.speak(utterance);
+  speakNext();
 }
 speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
 userInput.focus();
