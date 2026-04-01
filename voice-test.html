@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>叡智コーチ - 声の選択</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; background: linear-gradient(160deg, #fff7ed, #ffedd5, #fed7aa); min-height: 100vh; padding: 40px 20px; color: #431407; }
+  h1 { text-align: center; color: #ea580c; font-size: 1.5rem; margin-bottom: 8px; }
+  p.subtitle { text-align: center; color: #9a3412; font-size: 0.9rem; margin-bottom: 30px; }
+  .container { max-width: 600px; margin: 0 auto; }
+  .voice-card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 2px solid transparent; transition: all 0.2s; cursor: pointer; }
+  .voice-card:hover { border-color: #f97316; }
+  .voice-card.selected { border-color: #ea580c; background: #fff7ed; }
+  .voice-card.playing { border-color: #ea580c; }
+  .voice-name { font-size: 1.1rem; font-weight: bold; color: #9a3412; }
+  .voice-desc { font-size: 0.85rem; color: #78350f; margin-top: 4px; }
+  .voice-status { font-size: 0.8rem; color: #ea580c; margin-top: 8px; display: none; }
+  .voice-card.playing .voice-status { display: block; }
+  .play-btn { display: inline-block; margin-top: 10px; background: linear-gradient(135deg, #ea580c, #f97316); color: #fff; border: none; border-radius: 20px; padding: 8px 20px; font-size: 0.85rem; cursor: pointer; }
+  .play-btn:hover { opacity: 0.9; }
+  .play-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .confirm-area { text-align: center; margin-top: 30px; }
+  .confirm-btn { background: linear-gradient(135deg, #ea580c, #f97316); color: #fff; border: none; border-radius: 30px; padding: 14px 40px; font-size: 1.1rem; cursor: pointer; display: none; }
+  .confirm-btn:hover { opacity: 0.9; }
+  .confirm-btn.show { display: inline-block; }
+  .note { text-align: center; margin-top: 16px; font-size: 0.8rem; color: #9a3412; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>声を選んでください</h1>
+  <p class="subtitle">それぞれの「試聴する」ボタンを押して、お好みの声を見つけてください</p>
+
+  <div class="voice-card" data-voice="shimmer">
+    <div class="voice-name">Shimmer（シマー）</div>
+    <div class="voice-desc">明るく親しみやすい女性の声</div>
+    <div class="voice-status">再生中...</div>
+    <button class="play-btn" onclick="playVoice('shimmer', this)">試聴する</button>
+  </div>
+
+  <div class="voice-card" data-voice="nova">
+    <div class="voice-name">Nova（ノヴァ）</div>
+    <div class="voice-desc">温かく落ち着いた女性の声</div>
+    <div class="voice-status">再生中...</div>
+    <button class="play-btn" onclick="playVoice('nova', this)">試聴する</button>
+  </div>
+
+  <div class="voice-card" data-voice="alloy">
+    <div class="voice-name">Alloy（アロイ）</div>
+    <div class="voice-desc">中性的でバランスの良い声</div>
+    <div class="voice-status">再生中...</div>
+    <button class="play-btn" onclick="playVoice('alloy', this)">試聴する</button>
+  </div>
+
+  <div class="voice-card" data-voice="fable">
+    <div class="voice-name">Fable（フェイブル）</div>
+    <div class="voice-desc">柔らかく物語るような声</div>
+    <div class="voice-status">再生中...</div>
+    <button class="play-btn" onclick="playVoice('fable', this)">試聴する</button>
+  </div>
+
+  <div class="voice-card" data-voice="echo">
+    <div class="voice-name">Echo（エコー）</div>
+    <div class="voice-desc">落ち着いた男性の声</div>
+    <div class="voice-status">再生中...</div>
+    <button class="play-btn" onclick="playVoice('echo', this)">試聴する</button>
+  </div>
+
+  <div class="voice-card" data-voice="onyx">
+    <div class="voice-name">Onyx（オニキス）</div>
+    <div class="voice-desc">深みのある男性の声</div>
+    <div class="voice-status">再生中...</div>
+    <button class="play-btn" onclick="playVoice('onyx', this)">試聴する</button>
+  </div>
+
+  <div class="note">※ 試聴にはAPI利用料がわずかにかかります（1回約0.1円）</div>
+</div>
+
+<script>
+let currentAudio = null;
+const sampleText = "あなたの人生への真剣な思いが伝わってきます。とても素敵なことですね。アリストテレスも言いました、卓越は習慣であると。今日、たった一つだけ、小さな一歩を決めてみませんか？あなたなら、きっとできます。";
+
+async function playVoice(voice, btn) {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  document.querySelectorAll('.voice-card').forEach(c => c.classList.remove('playing'));
+
+  const card = btn.closest('.voice-card');
+  card.classList.add('playing');
+  document.querySelectorAll('.play-btn').forEach(b => b.disabled = true);
+  btn.textContent = '読み込み中...';
+
+  try {
+    const res = await fetch('/.netlify/functions/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: sampleText, voice: voice }),
+    });
+    if (!res.ok) throw new Error('TTS error');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    currentAudio = audio;
+    audio.onended = () => {
+      card.classList.remove('playing');
+      document.querySelectorAll('.play-btn').forEach(b => { b.disabled = false; b.textContent = '試聴する'; });
+      URL.revokeObjectURL(url);
+    };
+    audio.play();
+    btn.textContent = '再生中...';
+  } catch (e) {
+    card.classList.remove('playing');
+    document.querySelectorAll('.play-btn').forEach(b => { b.disabled = false; b.textContent = '試聴する'; });
+    alert('音声の生成に失敗しました。しばらく待ってからお試しください。');
+  }
+}
+</script>
+</body>
+</html>
