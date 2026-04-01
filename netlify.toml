@@ -1,0 +1,7 @@
+[build]
+  # Netlify Functionsの場所を指定
+  functions = "netlify/functions"
+
+[functions]
+  # Node.js を使用
+  node_bundler = "esbuild"

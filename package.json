@@ -1,0 +1,8 @@
+{
+  "name": "wisdom-coach",
+  "version": "1.0.0",
+  "description": "叡智コーチ - 愛と知恵の万能コーチ",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0"
+  }
+}
