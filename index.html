@@ -201,7 +201,7 @@ async function speakText(text, btnElement) {
     const res = await fetch('/.netlify/functions/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, voice: "nova" }),
     });
     if (!res.ok) throw new Error('TTS error');
     const blob = await res.blob();
