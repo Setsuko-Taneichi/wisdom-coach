@@ -196,9 +196,16 @@ function speakText(text, btnElement) {
   if (currentUtterance) speechSynthesis.cancel();
   document.querySelectorAll('.speaker-btn.speaking').forEach(b => b.classList.remove('speaking'));
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'ja-JP'; utterance.rate = parseFloat(voiceSpeed.value); utterance.pitch = 1.05;
+  utterance.lang = 'ja-JP'; utterance.rate = parseFloat(voiceSpeed.value); utterance.pitch = 1.15;
   const voices = speechSynthesis.getVoices();
-  const jaVoice = voices.find(v => v.lang.startsWith('ja'));
+  const preferredNames = ['Kyoko', 'O-Ren', 'Haruka', 'Google 日本語'];
+  let jaVoice = null;
+  for (const name of preferredNames) {
+    jaVoice = voices.find(v => v.name.includes(name) && v.lang.startsWith('ja'));
+    if (jaVoice) break;
+  }
+  if (!jaVoice) jaVoice = voices.find(v => v.lang.startsWith('ja') && v.name.toLowerCase().includes('female'));
+  if (!jaVoice) jaVoice = voices.find(v => v.lang.startsWith('ja'));
   if (jaVoice) utterance.voice = jaVoice;
   if (btnElement) {
     btnElement.classList.add('speaking');
