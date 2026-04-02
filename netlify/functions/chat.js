@@ -307,9 +307,9 @@ exports.handler = async (event) => {
   try {
     const { message, history, accessCode } = JSON.parse(event.body);
 
-    // アクセスコード検証
-    const validCode = process.env.ACCESS_CODE || "WISDOM2026";
-    if (!accessCode || accessCode !== validCode) {
+    // アクセスコード検証（カンマ区切りで複数コードに対応）
+    const validCodes = (process.env.ACCESS_CODE || "WISDOM2026").split(",").map(c => c.trim());
+    if (!accessCode || !validCodes.includes(accessCode)) {
       return { statusCode: 403, headers: securityHeaders(origin), body: JSON.stringify({ error: "アクセスコードが正しくありません" }) };
     }
 
