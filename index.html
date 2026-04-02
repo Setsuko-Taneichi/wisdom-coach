@@ -199,7 +199,11 @@ let currentAudio = null;
 async function speakText(text, btnElement) {
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   document.querySelectorAll('.speaker-btn.speaking').forEach(b => b.classList.remove('speaking'));
-  if (btnElement) btnElement.classList.add('speaking');
+  if (btnElement) {
+    btnElement.classList.add('speaking');
+    btnElement.setAttribute('title', 'そうですね...');
+    btnElement.innerHTML = '💭';
+  }
   try {
     const res = await fetch('/.netlify/functions/tts', {
       method: 'POST',
@@ -212,18 +216,22 @@ async function speakText(text, btnElement) {
     const audio = new Audio(url);
     currentAudio = audio;
     audio.playbackRate = parseFloat(voiceSpeed.value);
+    if (btnElement) {
+      btnElement.innerHTML = '🔊';
+      btnElement.setAttribute('title', '再生中...');
+    }
     audio.onended = () => {
-      if (btnElement) btnElement.classList.remove('speaking');
+      if (btnElement) { btnElement.classList.remove('speaking'); btnElement.innerHTML = '🔈'; btnElement.setAttribute('title', '読み上げる'); }
       currentAudio = null;
       URL.revokeObjectURL(url);
     };
     audio.onerror = () => {
-      if (btnElement) btnElement.classList.remove('speaking');
+      if (btnElement) { btnElement.classList.remove('speaking'); btnElement.innerHTML = '🔈'; btnElement.setAttribute('title', '読み上げる'); }
       currentAudio = null;
     };
     audio.play();
   } catch (e) {
-    if (btnElement) btnElement.classList.remove('speaking');
+    if (btnElement) { btnElement.classList.remove('speaking'); btnElement.innerHTML = '🔈'; btnElement.setAttribute('title', '読み上げる'); }
     currentAudio = null;
   }
 }
