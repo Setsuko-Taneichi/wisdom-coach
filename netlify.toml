@@ -5,3 +5,18 @@
 [functions]
   # Node.js を使用
   node_bundler = "esbuild"
+
+# セキュリティヘッダー（社員さんの安全を守る）
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # クリックジャッキング防止（他のサイトに埋め込まれるのを防ぐ）
+    X-Frame-Options = "DENY"
+    # XSS攻撃防止
+    X-Content-Type-Options = "nosniff"
+    # リファラー情報の制限（プライバシー保護）
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # HTTPS強制
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    # 権限ポリシー（不要な機能へのアクセスを制限）
+    Permissions-Policy = "camera=(), geolocation=(), microphone=()"
