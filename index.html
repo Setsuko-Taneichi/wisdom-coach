@@ -116,7 +116,7 @@
 
 <div class="input-area">
   <div class="input-wrapper">
-    <textarea id="userInput" placeholder="何でも安心して話してください..." rows="1" onkeydown="handleKeyDown(event)"></textarea>
+    <textarea id="userInput" placeholder="何でも安心して話してください..." rows="1" ></textarea>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">&#10148;</button>
   </div>
 </div>
@@ -135,7 +135,7 @@ const voiceEnabled = document.getElementById('voiceEnabled');
 const voiceSpeed = document.getElementById('voiceSpeed');
 
 userInput.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
-function handleKeyDown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+
 function sendExample(btn) { userInput.value = btn.textContent; sendMessage(); }
 
 async function sendMessage() {
