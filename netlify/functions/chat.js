@@ -305,7 +305,13 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { message, history } = JSON.parse(event.body);
+    const { message, history, accessCode } = JSON.parse(event.body);
+
+    // アクセスコード検証
+    const validCode = process.env.ACCESS_CODE || "WISDOM2026";
+    if (!accessCode || accessCode !== validCode) {
+      return { statusCode: 403, headers: securityHeaders(origin), body: JSON.stringify({ error: "アクセスコードが正しくありません" }) };
+    }
 
     if (!message) {
       return { statusCode: 400, headers: securityHeaders(origin), body: JSON.stringify({ error: "メッセージが空です" }) };
