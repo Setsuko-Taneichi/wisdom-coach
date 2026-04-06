@@ -74,6 +74,41 @@
   .privacy-notice { text-align: center; padding: 8px 20px; font-size: 0.7rem; color: #9a7b6a; background: rgba(234,88,12,0.03); border-top: 1px solid rgba(234,88,12,0.08); }
   .privacy-notice a { color: #ea580c; text-decoration: none; }
   .privacy-icon { margin-right: 4px; }
+  /* 利用規約モーダル */
+  .terms-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1100;
+    background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+  }
+  .terms-overlay.hidden { display: none; }
+  .terms-modal {
+    background: #ffffff; border-radius: 20px; padding: 28px 24px; max-width: 500px; width: 92%;
+    max-height: 85vh; display: flex; flex-direction: column;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    font-family: 'Hiragino Sans', 'Meiryo', 'Noto Sans JP', sans-serif;
+  }
+  .terms-modal h2 { font-size: 1.1rem; color: #ea580c; margin-bottom: 12px; text-align: center; }
+  .terms-content {
+    flex: 1; overflow-y: auto; font-size: 0.78rem; color: #431407; line-height: 1.8;
+    border: 1px solid rgba(234,88,12,0.15); border-radius: 12px; padding: 16px;
+    margin-bottom: 16px; max-height: 50vh; background: #fffbf7;
+  }
+  .terms-content h3 { font-size: 0.85rem; color: #9a3412; margin: 14px 0 6px 0; }
+  .terms-content h3:first-child { margin-top: 0; }
+  .terms-content p { margin-bottom: 8px; }
+  .terms-agree-area { text-align: center; }
+  .terms-agree-label {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 0.85rem; color: #431407; cursor: pointer; margin-bottom: 14px;
+  }
+  .terms-agree-label input { accent-color: #ea580c; width: 18px; height: 18px; }
+  .terms-agree-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 14px;
+    background: linear-gradient(135deg, #ea580c, #f97316); color: #ffffff;
+    font-size: 1rem; font-weight: bold; cursor: pointer; font-family: inherit;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .terms-agree-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .terms-agree-btn:not(:disabled):hover { transform: scale(1.02); }
   /* モード選択画面 */
   .mode-screen {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999;
@@ -159,6 +194,45 @@
     <button class="access-btn" id="accessBtn" onclick="verifyAccessCode()">はじめる</button>
     <p class="access-error" id="accessError">アクセスコードが正しくありません</p>
     <p class="access-footer">アクセスコードは、所属企業の担当者からお受け取りください。</p>
+  </div>
+</div>
+
+
+<div class="terms-overlay hidden" id="termsOverlay">
+  <div class="terms-modal">
+    <h2>利用規約・プライバシーポリシー</h2>
+    <div class="terms-content">
+      <h3>■ サービス概要</h3>
+      <p>本サービス「叡智コーチ」は、AIを活用したセルフケア支援ツールです。医療行為、診断、治療を目的としたものではありません。深刻な心身の不調がある場合は、医療機関や専門家にご相談ください。</p>
+
+      <h3>■ 利用条件</h3>
+      <p>本サービスは、所属企業を通じてアクセスコードを付与された方のみご利用いただけます。アクセスコードの第三者への共有・譲渡はできません。</p>
+
+      <h3>■ AIの回答について</h3>
+      <p>AIの回答は一般的な情報提供およびセルフケアの支援を目的としており、専門家のアドバイスに代わるものではありません。回答の正確性・完全性を保証するものではなく、回答に基づく行動は利用者ご自身の判断と責任において行ってください。</p>
+
+      <h3>■ プライバシーポリシー</h3>
+      <p><strong>会話内容の非保存：</strong>会話の内容はサーバーに保存されません。ブラウザを閉じると会話履歴は消去されます。</p>
+      <p><strong>個人情報の非収集：</strong>氏名、メールアドレス等の個人情報の入力は不要であり、収集しません。</p>
+      <p><strong>利用状況の記録：</strong>サービス改善のため、企業単位での利用回数（日時・アクセスコード）を記録する場合があります。個人を特定する情報は含まれません。</p>
+      <p><strong>音声データ：</strong>音声モードをご利用の場合、音声合成のためにテキストデータを外部API（OpenAI）に送信します。送信データは音声生成のみに使用され、保存されません。</p>
+
+      <h3>■ 免責事項</h3>
+      <p>本サービスの利用により生じた損害について、運営者は一切の責任を負いません。サービスの内容は予告なく変更・中断する場合があります。</p>
+
+      <h3>■ 運営者情報</h3>
+      <p>Dr.Ridente株式会社（産業医・精神科医・児童精神科医　種市摂子）</p>
+
+      <h3>■ お問い合わせ</h3>
+      <p>ご不明な点がございましたら、所属企業の担当者を通じてお問い合わせください。</p>
+    </div>
+    <div class="terms-agree-area">
+      <label class="terms-agree-label">
+        <input type="checkbox" id="termsAgreeCheck" onchange="document.getElementById('termsAgreeBtn').disabled = !this.checked">
+        上記の利用規約・プライバシーポリシーに同意します
+      </label>
+      <button class="terms-agree-btn" id="termsAgreeBtn" disabled onclick="acceptTerms()">同意して利用を開始する</button>
+    </div>
   </div>
 </div>
 
@@ -390,6 +464,24 @@ function showModeScreen() {
   modeScreen.classList.remove('hidden');
 }
 
+// 利用規約同意管理
+const termsOverlay = document.getElementById('termsOverlay');
+const termsAgreed = localStorage.getItem('wisdom_coach_terms_agreed');
+
+function showTerms() {
+  termsOverlay.classList.remove('hidden');
+}
+
+function acceptTerms() {
+  localStorage.setItem('wisdom_coach_terms_agreed', 'yes');
+  termsOverlay.classList.add('hidden');
+  if (!currentMode) {
+    modeScreen.classList.remove('hidden');
+  } else {
+    applyMode();
+  }
+}
+
 // アクセスコード管理
 const accessScreen = document.getElementById('accessScreen');
 const accessCodeInput = document.getElementById('accessCodeInput');
@@ -399,7 +491,7 @@ const accessError = document.getElementById('accessError');
 const savedCode = localStorage.getItem('wisdom_coach_access');
 if (savedCode) {
   verifyWithServer(savedCode).then(valid => {
-    if (valid) { accessScreen.classList.add('hidden'); if (!currentMode) { modeScreen.classList.remove('hidden'); } else { applyMode(); } }
+    if (valid) { accessScreen.classList.add('hidden'); if (!localStorage.getItem('wisdom_coach_terms_agreed')) { showTerms(); } else if (!currentMode) { modeScreen.classList.remove('hidden'); } else { applyMode(); } }
   });
 }
 
@@ -418,7 +510,7 @@ async function verifyAccessCode() {
   if (valid) {
     localStorage.setItem('wisdom_coach_access', code);
     accessScreen.classList.add('hidden');
-    if (!currentMode) { modeScreen.classList.remove('hidden'); } else { applyMode(); }
+    if (!localStorage.getItem('wisdom_coach_terms_agreed')) { showTerms(); } else if (!currentMode) { modeScreen.classList.remove('hidden'); } else { applyMode(); }
   } else {
     accessError.style.display = 'block';
   }
