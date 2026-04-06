@@ -8,6 +8,9 @@
 
 const Anthropic = require("@anthropic-ai/sdk");
 
+// Google Sheets ログ用URL（環境変数から取得）
+const LOG_URL = process.env.LOG_WEBHOOK_URL || "";
+
 const COACH_SYSTEM_PROMPT = `あなたは「叡智コーチ」です。
 愛に溢れたカウンセラーであり、人生を変える力を持つコーチです。
 世界の偉人の叡智、ユダヤ人の母の無条件の愛、そして最新の脳科学の知見を融合させ、
@@ -90,7 +93,7 @@ const COACH_SYSTEM_PROMPT = `あなたは「叡智コーチ」です。
 - 「もし何の制約もなかったら、どんな人生を選びますか？」
 - 「あなたが人生の最後に『これでよかった』と思えるのは、どんな生き方ですか？」
 - 「あなたが大切にしたい価値観は何ですか？」
-- 「あなたの人生で、誰にどんな影響を与えたいですか？」
+- 「あなたが人生で、誰にどんな影響を与えたいですか？」
 ただし、いきなり重い問いを投げないこと。信頼関係が築かれてから、自然な流れで。
 
 ### 人生ビジョンと日常をつなげる
@@ -283,6 +286,20 @@ function securityHeaders(origin) {
   };
 }
 
+// Google Sheetsにログを送信（非同期・エラーでもチャットには影響しない）
+async function sendLog(accessCode, mode) {
+  if (!LOG_URL) return;
+  try {
+    await fetch(LOG_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessCode, mode }),
+    });
+  } catch (e) {
+    // ログ送信失敗してもチャットは止めない
+  }
+}
+
 exports.handler = async (event) => {
   const origin = event.headers.origin || event.headers.Origin || "";
 
@@ -305,7 +322,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { message, history, accessCode } = JSON.parse(event.body);
+    const { message, history, accessCode, mode } = JSON.parse(event.body);
 
     // アクセスコード検証（カンマ区切りで複数コードに対応）
     const validCodes = (process.env.ACCESS_CODE || "WISDOM2026").split(",").map(c => c.trim());
@@ -321,6 +338,9 @@ exports.handler = async (event) => {
     if (message.length > 500) {
       return { statusCode: 400, headers: securityHeaders(origin), body: JSON.stringify({ error: "メッセージは500文字以内でお願いします。" }) };
     }
+
+    // Google Sheetsにログ送信（バックグラウンド）
+    sendLog(accessCode, mode || "text");
 
     // セキュリティ：会話履歴の長さを制限（直近20往復まで）
     const safeHistory = (history || []).slice(-40);
