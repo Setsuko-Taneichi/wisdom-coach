@@ -339,8 +339,8 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers: securityHeaders(origin), body: JSON.stringify({ error: "メッセージは500文字以内でお願いします。" }) };
     }
 
-    // Google Sheetsにログ送信（バックグラウンド）
-    sendLog(accessCode, mode || "text");
+    // Google Sheetsにログ送信
+    await sendLog(accessCode, mode || "text");
 
     // セキュリティ：会話履歴の長さを制限（直近20往復まで）
     const safeHistory = (history || []).slice(-40);
