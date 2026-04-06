@@ -286,18 +286,34 @@ function securityHeaders(origin) {
   };
 }
 
-// Google Sheetsにログを送信（非同期・エラーでもチャットには影響しない）
-async function sendLog(accessCode, mode) {
-  if (!LOG_URL) return;
-  try {
-    await fetch(LOG_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessCode, mode }),
-    });
-  } catch (e) {
-    // ログ送信失敗してもチャットは止めない
-  }
+// Google Sheetsにログを送信
+const https = require("https");
+function sendLog(accessCode, mode) {
+  if (!LOG_URL) return Promise.resolve();
+  return new Promise((resolve) => {
+    try {
+      const data = JSON.stringify({ accessCode, mode });
+      const url = new URL(LOG_URL);
+      const options = {
+        hostname: url.hostname,
+        path: url.pathname + url.search,
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(data) },
+      };
+      const req = https.request(options, (res) => {
+        if (res.statusCode === 302 || res.statusCode === 301) {
+          https.get(res.headers.location, () => resolve());
+        } else {
+          resolve();
+        }
+      });
+      req.on("error", () => resolve());
+      req.write(data);
+      req.end();
+    } catch (e) {
+      resolve();
+    }
+  });
 }
 
 exports.handler = async (event) => {
