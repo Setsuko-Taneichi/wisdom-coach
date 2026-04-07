@@ -286,32 +286,22 @@ function securityHeaders(origin) {
   };
 }
 
-// Google Sheetsにログを送信（GETリクエスト方式）
-const https = require("https");
-function sendLog(accessCode, mode) {
-  if (!LOG_URL) return Promise.resolve();
-  const logUrl = LOG_URL + "?accessCode=" + encodeURIComponent(accessCode) + "&mode=" + encodeURIComponent(mode);
-  console.log("sendLog GET:", logUrl.substring(0, 80));
-  return new Promise((resolve) => {
-    try {
-      const doGet = (url) => {
-        https.get(url, (res) => {
-          res.on("data", () => {});
-          res.on("end", () => {
-            console.log("sendLog response:", res.statusCode);
-            if ((res.statusCode === 302 || res.statusCode === 301) && res.headers.location) {
-              doGet(res.headers.location);
-            } else {
-              resolve();
-            }
-          });
-        }).on("error", (err) => { console.log("sendLog error:", err.message); resolve(); });
-      };
-      doGet(logUrl);
-    } catch (e) {
-      resolve();
-    }
-  });
+// Google Sheetsにログを送信（fetch方式）
+async function sendLog(accessCode, mode) {
+  if (!LOG_URL) return;
+  try {
+    const baseUrl = LOG_URL.trim();
+    const logUrl = baseUrl + "?accessCode=" + encodeURIComponent(accessCode) + "&mode=" + encodeURIComponent(mode);
+    console.log("sendLog fetch:", logUrl.substring(0, 80));
+    const res = await fetch(logUrl, {
+      redirect: "follow",
+      headers: { "User-Agent": "Mozilla/5.0 WisdomCoach/1.0" }
+    });
+    const text = await res.text();
+    console.log("sendLog response:", res.status, text.substring(0, 50));
+  } catch (e) {
+    console.log("sendLog error:", e.message);
+  }
 }
 
 exports.handler = async (event) => {
