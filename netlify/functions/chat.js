@@ -289,28 +289,41 @@ function securityHeaders(origin) {
 // Google Sheetsにログを送信
 const https = require("https");
 function sendLog(accessCode, mode) {
-  if (!LOG_URL) return Promise.resolve();
+  if (!LOG_URL) {
+    console.log("LOG_URL is empty, skipping log");
+    return Promise.resolve();
+  }
+  console.log("sendLog called:", accessCode, mode, "URL:", LOG_URL.substring(0, 50));
   return new Promise((resolve) => {
     try {
       const data = JSON.stringify({ accessCode, mode });
-      const url = new URL(LOG_URL);
-      const options = {
-        hostname: url.hostname,
-        path: url.pathname + url.search,
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(data) },
+      const postToUrl = (targetUrl) => {
+        const url = new URL(targetUrl);
+        const options = {
+          hostname: url.hostname,
+          path: url.pathname + url.search,
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(data) },
+        };
+        const req = https.request(options, (res) => {
+          let body = "";
+          res.on("data", (chunk) => { body += chunk; });
+          res.on("end", () => {
+            console.log("Response:", res.statusCode, body.substring(0, 100));
+            if ((res.statusCode === 302 || res.statusCode === 301) && res.headers.location) {
+              postToUrl(res.headers.location);
+            } else {
+              resolve();
+            }
+          });
+        });
+        req.on("error", (err) => { console.log("sendLog error:", err.message); resolve(); });
+        req.write(data);
+        req.end();
       };
-      const req = https.request(options, (res) => {
-        if (res.statusCode === 302 || res.statusCode === 301) {
-          https.get(res.headers.location, () => resolve());
-        } else {
-          resolve();
-        }
-      });
-      req.on("error", () => resolve());
-      req.write(data);
-      req.end();
+      postToUrl(LOG_URL);
     } catch (e) {
+      console.log("sendLog catch:", e.message);
       resolve();
     }
   });
