@@ -286,44 +286,29 @@ function securityHeaders(origin) {
   };
 }
 
-// Google Sheetsにログを送信
+// Google Sheetsにログを送信（GETリクエスト方式）
 const https = require("https");
 function sendLog(accessCode, mode) {
-  if (!LOG_URL) {
-    console.log("LOG_URL is empty, skipping log");
-    return Promise.resolve();
-  }
-  console.log("sendLog called:", accessCode, mode, "URL:", LOG_URL.substring(0, 50));
+  if (!LOG_URL) return Promise.resolve();
+  const logUrl = LOG_URL + "?accessCode=" + encodeURIComponent(accessCode) + "&mode=" + encodeURIComponent(mode);
+  console.log("sendLog GET:", logUrl.substring(0, 80));
   return new Promise((resolve) => {
     try {
-      const data = JSON.stringify({ accessCode, mode });
-      const postToUrl = (targetUrl) => {
-        const url = new URL(targetUrl);
-        const options = {
-          hostname: url.hostname,
-          path: url.pathname + url.search,
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(data) },
-        };
-        const req = https.request(options, (res) => {
-          let body = "";
-          res.on("data", (chunk) => { body += chunk; });
+      const doGet = (url) => {
+        https.get(url, (res) => {
+          res.on("data", () => {});
           res.on("end", () => {
-            console.log("Response:", res.statusCode, body.substring(0, 100));
+            console.log("sendLog response:", res.statusCode);
             if ((res.statusCode === 302 || res.statusCode === 301) && res.headers.location) {
-              postToUrl(res.headers.location);
+              doGet(res.headers.location);
             } else {
               resolve();
             }
           });
-        });
-        req.on("error", (err) => { console.log("sendLog error:", err.message); resolve(); });
-        req.write(data);
-        req.end();
+        }).on("error", (err) => { console.log("sendLog error:", err.message); resolve(); });
       };
-      postToUrl(LOG_URL);
+      doGet(logUrl);
     } catch (e) {
-      console.log("sendLog catch:", e.message);
       resolve();
     }
   });
