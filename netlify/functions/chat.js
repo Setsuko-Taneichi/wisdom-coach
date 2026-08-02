@@ -329,7 +329,7 @@ exports.handler = async (event) => {
     const messages = [...safeHistory, { role: "user", content: message }];
  
     const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-5",
       max_tokens: 400,
       system: COACH_SYSTEM_PROMPT,
       messages,
