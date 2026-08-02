@@ -338,7 +338,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: securityHeaders(origin),
-      body: JSON.stringify({ response: response.content[0].text }),
+      body: JSON.stringify({ response: response.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("") }),
     };
   } catch (err) {
     if (err.status === 401) {
